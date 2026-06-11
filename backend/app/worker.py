@@ -1,6 +1,7 @@
 """
-Pipeline runner — uses FastAPI BackgroundTasks (no Celery, no Redis queue needed).
-Uses Upstash Redis purely as a progress cache for SSE streaming.
+Pipeline runner — uses FastAPI BackgroundTasks.
+Parallel stages run inside workflow.py via ThreadPoolExecutor.
+Worker just streams progress per stage.
 """
 import time
 from datetime import datetime
@@ -8,9 +9,40 @@ from app.core.database import SessionLocal
 from app.core.cache import set_progress, delete_progress
 from app.models.project import Project
 from app.graph.workflow import workflow
-from app.graph.state import FIELD_MAP, AGENT_STEPS
 
-STEP_PROGRESS = {s[0]: s[2] for s in AGENT_STEPS}
+# Maps the node name that LangGraph emits → DB field to write + progress %
+# Stage nodes write multiple fields; we map the stage key to progress only.
+# Individual agent outputs are written inside _run_parallel via state.update().
+STAGE_PROGRESS = {
+    "research_analyst":   ("research_profile",  7),
+    "stage2":             (None,                21),   # tech_validator + market_discovery
+    "stage3":             (None,                35),   # customer_persona + competitor_intel + knowledge_graph
+    "stage4":             (None,                56),   # product_strategist + risk_analyst + investment_agent
+    "stage5":             (None,                70),   # mvp_planner + architect + revenue_strategy
+    "opportunity_scorer": ("opportunity_scores", 82),
+    "debate":             ("debate_transcript",  93),
+    "judge":              ("final_report",       100),
+}
+
+# All state keys that hold agent outputs — written after each stage completes
+ALL_OUTPUT_FIELDS = [
+    "research_profile", "innovation_score", "market_opportunities",
+    "customer_personas", "competitive_landscape", "product_concepts",
+    "mvp_plan", "architecture", "revenue_strategy", "risk_profile",
+    "investment_score", "knowledge_graph", "opportunity_scores",
+    "debate_transcript", "final_report",
+]
+
+STAGE_LABELS = {
+    "research_analyst":   "Research Analyst",
+    "stage2":             "Technical Validator + Market Discovery",
+    "stage3":             "Customer Personas + Competitors + Knowledge Graph",
+    "stage4":             "Product Strategy + Risk + Investment",
+    "stage5":             "MVP + Architecture + Revenue",
+    "opportunity_scorer": "Opportunity Scorer",
+    "debate":             "Agent Debate",
+    "judge":              "Judge Agent",
+}
 
 
 def run_analysis(project_id: str, raw_text: str):
@@ -55,39 +87,39 @@ def run_analysis(project_id: str, raw_text: str):
 
         for step_output in workflow.stream(state):
             for node_name, node_state in step_output.items():
-                # Write output field to DB
-                field = FIELD_MAP.get(node_name)
-                if field and node_state.get(field) is not None:
-                    db.refresh(project)
-                    setattr(project, field, node_state[field])
+                db.refresh(project)
 
-                # Accumulate metrics
-                meta = (node_state.get("agent_metadata") or {}).get(node_name, {})
-                total_tokens += meta.get("total_tokens", 0) or 0
-                total_cost   += meta.get("estimated_cost_usd", 0.0) or 0.0
+                # Write all output fields that were populated in this stage
+                for field in ALL_OUTPUT_FIELDS:
+                    val = node_state.get(field)
+                    if val is not None:
+                        setattr(project, field, val)
 
-                progress = str(STEP_PROGRESS.get(node_name, 0))
-                project.current_agent = node_name
-                project.progress      = progress
+                # Accumulate cost/token metrics from all agents in this stage
+                for agent_meta in (node_state.get("agent_metadata") or {}).values():
+                    total_tokens += agent_meta.get("total_tokens", 0) or 0
+                    total_cost   += agent_meta.get("estimated_cost_usd", 0.0) or 0.0
+
+                _, progress = STAGE_PROGRESS.get(node_name, (None, 0))
+                label = STAGE_LABELS.get(node_name, node_name)
+                project.current_agent = label
+                project.progress      = str(progress)
                 db.commit()
 
-                # Push to Upstash Redis for SSE
                 set_progress(project_id, {
                     "status":        "processing",
-                    "current_agent": node_name,
-                    "progress":      progress,
+                    "current_agent": label,
+                    "progress":      str(progress),
                 })
 
                 state.update(node_state)
 
-        # Finalise
-        db.refresh(project)
-        project.status           = "completed"
-        project.current_agent    = None
-        project.progress         = "100"
-        project.completed_at     = datetime.utcnow()
-        project.total_tokens     = {"total": total_tokens}
-        project.total_cost_usd   = round(total_cost, 4)
+        project.status             = "completed"
+        project.current_agent      = None
+        project.progress           = "100"
+        project.completed_at       = datetime.utcnow()
+        project.total_tokens       = {"total": total_tokens}
+        project.total_cost_usd     = round(total_cost, 4)
         project.total_duration_sec = round(time.time() - t_start, 2)
         db.commit()
 

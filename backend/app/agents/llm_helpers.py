@@ -15,7 +15,7 @@ settings = get_settings()
 #   llama-3.3-70b-versatile : 6,000 TPM,  30 RPM
 #   llama-3.1-8b-instant    : 20,000 TPM, 30 RPM
 # We sleep 3s between agents to stay well under 30 RPM.
-INTER_AGENT_SLEEP = 3
+INTER_AGENT_SLEEP = 1
 
 
 def get_llm(provider: str, model: str, temperature: float = 0.3):
