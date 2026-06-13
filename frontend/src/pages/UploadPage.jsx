@@ -40,14 +40,14 @@ export default function UploadPage() {
 
       <form onSubmit={submit} className="space-y-5">
         <div>
-          <label className="block text-xs text-gray-400 mb-1">Project title (optional)</label>
-          <input type="text" value={title} onChange={e => setTitle(e.target.value)}
+          <label htmlFor="project_title" className="block text-xs text-gray-400 mb-1">Project title (optional)</label>
+          <input id="project_title" name="project_title" type="text" value={title} onChange={e => setTitle(e.target.value)}
             placeholder="e.g. CRISPR Gene Editing Commercialisation"
             className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
 
         <div {...getRootProps()} className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${isDragActive ? "border-brand-500 bg-brand-500/5" : "border-gray-700 hover:border-gray-500"}`}>
-          <input {...getInputProps()} />
+          <input {...getInputProps({ id: "research_file", name: "research_file" })} />
           {file ? (
             <div className="flex items-center justify-center gap-3">
               <FileText size={18} className="text-green-400" />
@@ -71,7 +71,8 @@ export default function UploadPage() {
           <div className="flex-1 h-px bg-gray-800" />
         </div>
 
-        <textarea value={abstract} onChange={e => setAbstract(e.target.value)} rows={6}
+        <label htmlFor="abstract" className="sr-only">Research abstract or full text</label>
+        <textarea id="abstract" name="abstract" value={abstract} onChange={e => setAbstract(e.target.value)} rows={6}
           placeholder="Paste your research abstract, description, or full paper text here..."
           className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
 

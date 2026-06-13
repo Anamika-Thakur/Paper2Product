@@ -9,16 +9,17 @@ settings = get_settings()
 app = FastAPI(
     title="Research-to-Product Advisor",
     version="2.0.0",
-    description="AI Venture Studio — 15-agent pipeline with debate, scoring, and full traceability",
+    description="15-agent pipeline with debate, scoring, and full traceability",
 )
 
+# Auth uses Bearer tokens (not cookies), so allow_credentials=False lets us
+# safely use allow_origins=["*"]. Combining "*" with credentials=True is
+# invalid per the CORS spec — browsers then drop the ACAO header entirely,
+# which is what causes "No 'Access-Control-Allow-Origin' header" errors.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://paper2product.vercel.app",
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
