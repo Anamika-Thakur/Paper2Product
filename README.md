@@ -111,7 +111,7 @@ The output isn't a vague summary. It's a structured report with market sizing, c
                                    │  issues final GO / NO-GO │
                                    │  verdict + full report   │
                                    └──────────────────────────┘
-        ```
+```
 
 Every agent reads the shared analysis state, adds its own output (plus reasoning, confidence, and sources), and passes the enriched state to the next stage. The full state — including every intermediate agent output — is persisted, so the entire decision trail is auditable after the fact.
 
