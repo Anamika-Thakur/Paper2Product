@@ -103,7 +103,7 @@ export default function ProcessingPage() {
 
       {status.status === "failed" && (
         <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-300 text-sm">
-          Analysis failed. Please try again or check your API keys.
+          Analysis failed. Come Back later.
         </div>
       )}
     </div>
