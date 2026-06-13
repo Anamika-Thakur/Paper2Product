@@ -26,14 +26,14 @@ export default function AuthPage() {
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 bg-brand-500 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold">R</span>
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="w-32 h-20 rounded-xl overflow-hidden border-2 border-white bg-white flex items-center justify-center">
+              <img src="/logo.jpg" alt="Paper2Product logo" className="w-full h-full object-contain" />
             </div>
-            <span className="text-white font-bold text-xl">ResearchAdvisor</span>
+            <span className="text-white font-bold text-3xl">Paper2Product</span>
           </div>
           <h1 className="text-2xl font-bold text-white">{mode === "login" ? "Welcome back" : "Create account"}</h1>
-          <p className="text-gray-400 text-sm mt-1">AI Venture Studio</p>
+          <p className="text-gray-400 text-sm mt-1">From Research To Product</p>
         </div>
         <form onSubmit={handle} className="bg-gray-900 border border-gray-800 rounded-2xl p-6 space-y-4">
           {mode === "register" && (

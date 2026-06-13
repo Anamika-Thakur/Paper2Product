@@ -28,7 +28,7 @@ export default function ProcessingPage() {
   const [status, setStatus] = useState({ status: "processing", current_agent: null, progress: "0" });
 
   useEffect(() => {
-    const base = process.env.REACT_APP_API_URL || "http://localhost:8000";
+    const base = (process.env.REACT_APP_API_URL || "http://localhost:8000").replace(/\/+$/, "");
     const token = localStorage.getItem("token");
 
     const es = new EventSource(`${base}/api/projects/${projectId}/stream?token=${token}`);
