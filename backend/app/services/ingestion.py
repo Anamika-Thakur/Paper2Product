@@ -1,5 +1,4 @@
 import io
-import os
 from pathlib import Path
 from app.core.config import get_settings
 
@@ -29,17 +28,13 @@ def save_upload(project_id: str, filename: str, file_bytes: bytes) -> str:
 
 
 def store_embeddings(project_id: str, text: str):
-    try:
-        import chromadb
-        from langchain_text_splitters import RecursiveCharacterTextSplitter
-        client = chromadb.PersistentClient(path=settings.chromadb_path)
-        col = client.get_or_create_collection(f"project_{project_id}")
-        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-        chunks = splitter.split_text(text)
-        if chunks:
-            col.add(
-                documents=chunks,
-                ids=[f"{project_id}_{i}" for i in range(len(chunks))],
-            )
-    except Exception as e:
-        print(f"Embedding store failed (non-fatal): {e}")
+    """
+    Disabled — ChromaDB's default embedding function downloads a 79MB ONNX
+    model into memory on first use, which exceeds Render's 512MB free tier
+    and crashes the server (causing apparent CORS errors on the next request).
+
+    Embeddings aren't used anywhere in the report pipeline, so this is a no-op.
+    Re-enable only on a plan with >1GB RAM, or swap in a lightweight remote
+    embedding API instead of the local ONNX model.
+    """
+    pass

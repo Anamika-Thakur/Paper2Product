@@ -14,16 +14,11 @@ upstash-redis==1.1.0
 # Background tasks (FastAPI built-in, no Celery needed)
 # LLM / AI
 langchain==0.3.25
-langchain-core==0.3.59
 langgraph==0.2.56
-langchain-google-genai==2.1.4
 langchain-openai==0.3.16
 openai>=1.0.0
 tenacity>=8.2.0
 langchain-community==0.3.24
-
-# Vector store
-chromadb==0.5.5
 
 # Document parsing
 pypdf==4.2.0
